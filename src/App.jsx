@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AuthScreen from './AuthScreen'; // Importa a tela de autenticação
 import { 
-  LayoutGrid, ShoppingBag, Users, Package, 
-  TrendingUp, TrendingDown, AlertTriangle, 
-  Wallet, Search, X, Moon, Sun, Calendar, 
-  ArrowRight, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Check,
-  Tag, BarChart3, Clock, DollarSign, List, Calculator, Divide,
-  Contact, Truck, Plus, Smile
+    LayoutGrid, ShoppingBag, Users, Package, 
+    TrendingUp, TrendingDown, AlertTriangle, 
+    Wallet, Search, X, Moon, Sun, Calendar, 
+    ArrowRight, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Check,
+    Tag, BarChart3, Clock, DollarSign, List, Calculator, Divide,
+    Contact, Truck, Plus, Smile, LogOut // Adicionado LogOut, embora X já esteja importado
 } from 'lucide-react';
 
 // --- HELPER FUNCTIONS ---
@@ -542,7 +543,6 @@ const EntityEditModal = ({ show, onClose, isDark, type, entity }) => {
     };
 
     // Estilo base SEM w-full, usado para select e input de documento
-    // O w-full era o que causava o vazamento, pois forçava a largura máxima mesmo dentro do container flex
     const inputStyleDocumentoBase = 'p-3 rounded-lg border focus:ring-2 outline-none transition-colors ' +
         (isDark ? 'bg-zinc-950 border-zinc-700 text-white' : 'bg-gray-50 border-gray-300') +
         ' focus:ring-emerald-500';
@@ -1058,11 +1058,35 @@ const TransactionFormModal = ({ show, onClose, type, isDark, products, clients, 
 
 // --- APP PRINCIPAL ---
 const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false); 
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isDark, setIsDark] = useState(true); // ALTERADO: Definido como TRUE para iniciar em Dark Mode
+  const [isDark, setIsDark] = useState(true); // PADRÃO DARK MODE
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('venda'); 
   const [selectedProduct, setSelectedProduct] = useState(null); 
+  
+  // NOVO ESTADO PARA O MENU DO PERFIL
+  const [showProfileMenu, setShowProfileMenu] = useState(false); 
+
+  // Função para simular o Logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setActiveTab('dashboard'); 
+    setShowProfileMenu(false); // Fecha o menu ao sair
+  };
+
+  // Efeito para fechar o menu ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Verifica se o clique não foi no container do perfil
+      if (showProfileMenu && !event.target.closest('.profile-menu-container')) {
+        setShowProfileMenu(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showProfileMenu]);
+
 
   const today = new Date().toISOString().split('T')[0];
   const threeWeeksAgo = new Date();
@@ -1126,14 +1150,20 @@ const App = () => {
   const blueStyles = STYLES_MAP.blue;
   const roseStyles = STYLES_MAP.rose;
 
+  if (!isAuthenticated) {
+    return <AuthScreen onLoginSuccess={() => setIsAuthenticated(true)} />;
+  }
 
+
+  // A PARTIR DAQUI SÓ RENDERIZA SE ESTIVER AUTENTICADO
   return (
     <div className={`min-h-screen transition-colors duration-500 font-sans pb-24 md:pb-0 md:pl-24 ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-zinc-800'}`}>
       
-      {/* --- SIDEBAR e NAV BAR (FINANCEIRO -> CADASTROS) --- */}
+      {/* --- SIDEBAR e NAV BAR --- */}
       <nav className={`fixed z-40 transition-all duration-300 md:top-0 md:left-0 md:h-full md:w-24 md:flex-col md:border-r bottom-0 left-0 w-full flex justify-around items-center p-2 ${isDark ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white/90 border-gray-200'} backdrop-blur-lg`}>
         <div className="hidden md:flex flex-col items-center mt-6 mb-12">
-          <div className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">H</div>
+            {/* Logo 'S' ou outro ícone de branding */}
+            <div className="w-10 h-10 bg-gradient-to-tr from-emerald-500 to-blue-500 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-emerald-500/20">S</div>
         </div>
         {[
           { id: 'dashboard', icon: LayoutGrid, label: 'Início' },
@@ -1168,14 +1198,46 @@ const App = () => {
              {(activeTab === 'dashboard' || activeTab === 'estoque') && (
                 <DateFilterButton dateRange={dateRange} setDateRange={setDateRange} isDark={isDark} />
              )}
+             
+             {/* BOTÃO DE PERFIL E SAIR (CORRIGIDO PARA CLIQUE) */}
              <div className="flex gap-2">
                <button onClick={() => setIsDark(!isDark)} className="md:hidden p-2 rounded-full border border-zinc-200 dark:border-zinc-800">
                   {isDark ? <Sun size={20}/> : <Moon size={20}/>}
                </button>
-               <div className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden border-2 border-white dark:border-zinc-700">
-                 <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Juruba" alt="Avatar" />
+               
+               {/* Menu do Avatar com Logout - CONTAINER DE CLIQUE */}
+               <div className="relative profile-menu-container"> 
+                 {/* AVATAR - CHAMA O MENU NO CLIQUE */}
+                 <div 
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="w-10 h-10 rounded-full bg-zinc-200 overflow-hidden border-2 border-white dark:border-zinc-700 cursor-pointer"
+                 >
+                   <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Juruba" alt="Avatar" />
+                 </div>
+                 
+                 {/* Dropdown de Sair (Visibilidade controlada pelo estado showProfileMenu) */}
+                 <AnimatePresence>
+                    {showProfileMenu && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.8, y: -5 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.8, y: -5 }}
+                            transition={{ duration: 0.15 }}
+                            className={`absolute right-0 mt-3 w-40 rounded-xl shadow-xl py-1 origin-top-right z-50
+                                        ${isDark ? 'bg-zinc-800 border border-zinc-700' : 'bg-white border border-gray-200'}`}
+                        >
+                            <button 
+                                onClick={handleLogout}
+                                className="w-full px-4 py-2 text-sm text-left text-rose-500 hover:bg-rose-500/10 transition-colors flex items-center gap-2 font-medium"
+                            >
+                                <LogOut size={16} className="transform rotate-180"/> Sair
+                            </button>
+                        </motion.div>
+                    )}
+                 </AnimatePresence>
                </div>
              </div>
+             {/* FIM BOTÃO DE PERFIL E SAIR */}
           </div>
         </header>
 
@@ -1353,8 +1415,9 @@ const App = () => {
                             const dynamicBorderClass = getBorderColorClass(typeColor);
 
                             return (
-                                <div 
+                                <motion.div 
                                     key={h.id} 
+                                    whileHover={{ scale: 1.02, x: 5 }} 
                                     className={`flex justify-between items-center p-3 rounded-lg text-sm transition-colors 
                                     ${isDark ? 'bg-zinc-900' : 'bg-white hover:shadow-md'} 
                                     border-l-4 ${dynamicBorderClass}`} 
@@ -1371,7 +1434,7 @@ const App = () => {
                                     <span className={`font-mono font-bold text-lg text-${typeColor}-500`}>
                                         {h.type === 'venda' ? '+' : '-'} {money(h.total)}
                                     </span>
-                                </div>
+                                </motion.div>
                             );
                         })}
                       </div>
