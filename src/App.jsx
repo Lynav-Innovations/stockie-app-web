@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthScreen from './AuthScreen'; // Importa a tela de autenticação
+import PDVView from './PDVView'; // Importa a tela de PDV
 import { 
     LayoutGrid, ShoppingBag, Users, Package, 
     TrendingUp, TrendingDown, AlertTriangle, 
     Wallet, Search, X, Moon, Sun, Calendar, 
     ArrowRight, ChevronLeft, ChevronRight, ArrowUpRight, ArrowDownRight, Check,
     Tag, BarChart3, Clock, DollarSign, List, Calculator, Divide,
-    Contact, Truck, Plus, Smile, LogOut // Adicionado LogOut, embora X já esteja importado
+    Contact, Truck, Plus, Smile, LogOut, CreditCard // Adicionado CreditCard
 } from 'lucide-react';
 
 // --- HELPER FUNCTIONS ---
@@ -62,18 +63,30 @@ const maskCNPJ = (value) => {
 
 
 // --- MOCK DATA ---
-const products = [
-    { id: 1, name: 'Mamão Papaya (Cx)', stock: 45, unit: 'cx (Caixa)', image: '🥭', buyPrice: 15, sellPrice: 23 },
-    { id: 2, name: 'Banana Prata (Cx)', stock: 120, unit: 'kg (Kilo)', image: '🍌', buyPrice: 20, sellPrice: 35 },
-    { id: 3, name: 'Morango (Bdja)', stock: 15, unit: 'un (Unidade)', image: '🍓', buyPrice: 8, sellPrice: 15 },
-];
-const clients = [
-    { id: 1, name: 'Mercadinho da Esquina', contact: '(11) 98765-4321', cpf: '123.456.789-00', docType: 'CPF', email: 'mercado@exemplo.com' },
-    { id: 2, name: 'Restaurante Sabor', contact: '(21) 91234-5678', cpf: '000.111.222-33', docType: 'CPF', email: 'sabor@exemplo.com' },
-];
 const suppliers = [
     { id: 101, name: 'Hortifruti Central', contact: '(31) 95555-4444', doc: '99.999.999/0001-00', docType: 'CNPJ', email: 'horti@exemplo.com' },
     { id: 102, name: 'Distribuidora do Zé', contact: '(41) 96666-3333', doc: '111.222.333-44', docType: 'CPF', email: 'ze@exemplo.com' },
+    { id: 103, name: 'Frutas Tropicais Ltda', contact: '(21) 97777-8888', doc: '88.888.888/0001-88', docType: 'CNPJ', email: 'tropicais@exemplo.com' },
+];
+
+// Produtos agora incluem supplierId - mesmo produto pode vir de fornecedores diferentes
+const products = [
+    { id: 1, name: 'Mamão Papaya', stock: 45, unit: 'cx', image: '🥭', buyPrice: 15, sellPrice: 23, supplierId: 101 },
+    { id: 2, name: 'Mamão Papaya', stock: 30, unit: 'cx', image: '🥭', buyPrice: 14, sellPrice: 22, supplierId: 103 },
+    { id: 3, name: 'Banana Prata', stock: 120, unit: 'kg', image: '🍌', buyPrice: 20, sellPrice: 35, supplierId: 101 },
+    { id: 4, name: 'Banana Prata', stock: 80, unit: 'kg', image: '🍌', buyPrice: 18, sellPrice: 32, supplierId: 102 },
+    { id: 5, name: 'Morango', stock: 15, unit: 'bdja', image: '🍓', buyPrice: 8, sellPrice: 15, supplierId: 101 },
+    { id: 6, name: 'Morango', stock: 25, unit: 'bdja', image: '🍓', buyPrice: 9, sellPrice: 16, supplierId: 103 },
+    { id: 7, name: 'Abacaxi', stock: 50, unit: 'un', image: '🍍', buyPrice: 5, sellPrice: 8, supplierId: 101 },
+    { id: 8, name: 'Melancia', stock: 35, unit: 'un', image: '🍉', buyPrice: 12, sellPrice: 20, supplierId: 102 },
+    { id: 9, name: 'Uva Itália', stock: 40, unit: 'kg', image: '🍇', buyPrice: 15, sellPrice: 25, supplierId: 103 },
+    { id: 10, name: 'Maçã Fuji', stock: 60, unit: 'kg', image: '🍎', buyPrice: 10, sellPrice: 18, supplierId: 101 },
+];
+
+const clients = [
+    { id: 1, name: 'Mercadinho da Esquina', contact: '(11) 98765-4321', cpf: '123.456.789-00', docType: 'CPF', email: 'mercado@exemplo.com' },
+    { id: 2, name: 'Restaurante Sabor', contact: '(21) 91234-5678', cpf: '000.111.222-33', docType: 'CPF', email: 'sabor@exemplo.com' },
+    { id: 3, name: 'Padaria Pão Quente', contact: '(31) 99999-1111', cpf: '444.555.666-77', docType: 'CPF', email: 'padaria@exemplo.com' },
 ];
 
 
@@ -226,9 +239,9 @@ const CurrencyInputProduct = ({ label, isDark, value, setValue }) => {
 
 
 // MODAL PARA CADASTRO/EDIÇÃO DE PRODUTOS
-const ProductFormModal = ({ show, onClose, isDark, productToEdit }) => {
+const ProductFormModal = ({ show, onClose, isDark, productToEdit, suppliers }) => {
     const isEditing = !!productToEdit;
-    const [formData, setFormData] = useState(productToEdit || { name: '', image: '', stock: 0, unit: 'un (Unidade)', buyPrice: 0, sellPrice: 0 });
+    const [formData, setFormData] = useState(productToEdit || { name: '', image: '', stock: 0, unit: 'un (Unidade)', buyPrice: 0, sellPrice: 0, supplierId: null });
 
     const style = inputStyle(isDark);
 
@@ -279,6 +292,21 @@ const ProductFormModal = ({ show, onClose, isDark, productToEdit }) => {
                                         <option value="bdja (Bandeja)">bdja (Bandeja)</option>
                                     </select>
                                 </div>
+                            </div>
+
+                            {/* SELECT DE FORNECEDOR */}
+                            <div>
+                                <label className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-1 block">Fornecedor</label>
+                                <select 
+                                    value={formData.supplierId || ''} 
+                                    onChange={e => setFormData({...formData, supplierId: e.target.value ? parseInt(e.target.value) : null})} 
+                                    className={style}
+                                >
+                                    <option value="">Selecione um fornecedor (opcional)</option>
+                                    {suppliers.map(s => (
+                                        <option key={s.id} value={s.id}>{s.name}</option>
+                                    ))}
+                                </select>
                             </div>
 
                             <div className="grid grid-cols-3 gap-4">
@@ -496,6 +524,7 @@ const CadastrosView = ({ isDark, products, clients, suppliers }) => {
                 onClose={() => setShowProductModal(false)}
                 isDark={isDark}
                 productToEdit={productToEdit}
+                suppliers={suppliers}
             />
 
             {/* Modal Genérico de Entidade (Cliente/Fornecedor Edição) */}
@@ -1157,7 +1186,7 @@ const App = () => {
 
   // A PARTIR DAQUI SÓ RENDERIZA SE ESTIVER AUTENTICADO
   return (
-    <div className={`min-h-screen transition-colors duration-500 font-sans pb-24 md:pb-0 md:pl-24 ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-zinc-800'}`}>
+    <div className={`min-h-screen max-h-screen overflow-hidden transition-colors duration-500 font-sans pb-24 md:pb-0 md:pl-24 ${isDark ? 'bg-zinc-950 text-zinc-100' : 'bg-gray-50 text-zinc-800'}`}>
       
       {/* --- SIDEBAR e NAV BAR --- */}
       <nav className={`fixed z-40 transition-all duration-300 md:top-0 md:left-0 md:h-full md:w-24 md:flex-col md:border-r bottom-0 left-0 w-full flex justify-around items-center p-2 ${isDark ? 'bg-zinc-900/90 border-zinc-800' : 'bg-white/90 border-gray-200'} backdrop-blur-lg`}>
@@ -1168,6 +1197,7 @@ const App = () => {
         {[
           { id: 'dashboard', icon: LayoutGrid, label: 'Início' },
           { id: 'estoque', icon: Package, label: 'Estoque' },
+          { id: 'pdv', icon: CreditCard, label: 'PDV' },
           { id: 'cadastros', icon: Users, label: 'Cadastros' }, 
         ].map(item => (
           <button key={item.id} onClick={() => {setActiveTab(item.id); setSelectedProduct(null)}} className={`relative p-3 rounded-xl flex flex-col items-center gap-1 ${activeTab === item.id ? (isDark ? 'text-white' : 'text-emerald-600') : 'text-zinc-400'}`}>
@@ -1182,16 +1212,16 @@ const App = () => {
       </nav>
       
       {/* --- MAIN CONTENT --- */}
-      <main className="max-w-4xl mx-auto p-4 md:p-6 pt-8">
+      <main className={`mx-auto p-4 md:p-6 pt-8 ${activeTab === 'pdv' ? 'max-w-full' : 'max-w-4xl'}`}>
         
         {/* HEADER GERAL */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {activeTab === 'dashboard' ? 'Visão Geral' : activeTab === 'estoque' ? (selectedProduct ? `Análise: ${selectedProduct.name}` : 'Gestão de Produtos') : 'Cadastros Essenciais'}
+              {activeTab === 'dashboard' ? 'Visão Geral' : activeTab === 'pdv' ? 'Ponto de Venda (PDV)' : activeTab === 'estoque' ? (selectedProduct ? `Análise: ${selectedProduct.name}` : 'Gestão de Produtos') : 'Cadastros Essenciais'}
             </h1>
             <p className={`text-sm ${isDark ? 'text-zinc-500' : 'text-zinc-400'}`}>
-              {activeTab === 'cadastros' ? 'Gestão de Entidades (Produtos, Clientes, Fornecedores)' : 'Dados referentes ao período selecionado'}
+              {activeTab === 'cadastros' ? 'Gestão de Entidades (Produtos, Clientes, Fornecedores)' : activeTab === 'pdv' ? 'Sistema de vendas rápido e eficiente' : 'Dados referentes ao período selecionado'}
             </p>
           </div>
           <div className="flex flex-col md:flex-row items-end md:items-center gap-4 w-full md:w-auto">
@@ -1449,6 +1479,16 @@ const App = () => {
         {/* --- CADASTROS VIEW (NOVA TELA) --- */}
         {activeTab === 'cadastros' && (
             <CadastrosView 
+                isDark={isDark} 
+                products={products}
+                clients={clients}
+                suppliers={suppliers}
+            />
+        )}
+
+        {/* --- PDV VIEW --- */}
+        {activeTab === 'pdv' && (
+            <PDVView 
                 isDark={isDark} 
                 products={products}
                 clients={clients}
