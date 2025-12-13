@@ -1,22 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react'; // Adicionado useRef para gerenciar o foco
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-    Mail, Lock, LogIn, TrendingUp, User, ArrowLeft, 
+    Mail, Lock, LogIn, User, ArrowLeft, 
     Smartphone, MessageCircle, RefreshCw, CheckCircle, Package, Check, 
-    X 
+    X, Shield, Sparkles
 } from 'lucide-react';
 
-// Cor principal para destaque (Emerald)
-const COLOR_PRIMARY = '#059669'; 
-
-// Variantes para transições entre as telas (UX fluida)
 const screenVariants = {
-    initial: { opacity: 0, x: 200 },
-    in: { opacity: 1, x: 0, transition: { type: 'spring', stiffness: 100, damping: 20 } },
-    out: { opacity: 0, x: -200, transition: { duration: 0.3 } }
+    initial: { opacity: 0, y: 20 },
+    in: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } },
+    out: { opacity: 0, y: -20, transition: { duration: 0.2 } }
 };
 
-// --- FUNÇÃO DE MÁSCARA DE TELEFONE (Copiada do App.jsx) ---
 const maskPhone = (value) => {
     if (!value) return "";
     value = value.replace(/\D/g, "").substring(0, 11);
@@ -24,254 +19,258 @@ const maskPhone = (value) => {
     value = value.replace(/(\d{5})(\d)/, "$1-$2");
     return value;
 };
-// ------------------------------------------------------------
 
-// --- NOVO COMPONENTE: TOAST/NOTIFICAÇÃO ---
 const ToastNotification = ({ message, type = 'success', onClose }) => {
     const isSuccess = type === 'success';
-    const bgColor = isSuccess ? 'bg-emerald-600' : 'bg-rose-600';
 
     useEffect(() => {
-        const timer = setTimeout(() => {
-            onClose();
-        }, 3000); // Fecha após 3 segundos
+        const timer = setTimeout(onClose, 3500);
         return () => clearTimeout(timer);
     }, [onClose]);
 
     return (
         <motion.div
-            initial={{ y: 50, opacity: 0 }}
+            initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 50, opacity: 0 }}
-            className={`fixed bottom-4 right-4 p-4 rounded-xl text-white shadow-2xl z-50 ${bgColor} flex items-center gap-3`}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`fixed bottom-6 right-6 px-4 py-3 rounded-lg backdrop-blur-xl border shadow-lg z-50 flex items-center gap-3 ${
+                isSuccess 
+                    ? 'bg-violet-500/10 border-violet-500/20' 
+                    : 'bg-rose-500/10 border-rose-500/20'
+            }`}
         >
-            <Check size={20} />
-            <span className="font-medium text-sm">{message}</span>
-            <button onClick={onClose} className="p-1 -mr-2 opacity-70 hover:opacity-100 transition-opacity">
-                <X size={16} /> 
+            <div className={`p-1 rounded-full ${isSuccess ? 'bg-violet-500/20' : 'bg-rose-500/20'}`}>
+                <Check size={14} className={isSuccess ? 'text-violet-400' : 'text-rose-400'} strokeWidth={2.5} />
+            </div>
+            <span className="text-sm font-medium text-zinc-100">{message}</span>
+            <button onClick={onClose} className="ml-2 text-zinc-400 hover:text-zinc-100 transition-colors">
+                <X size={16} strokeWidth={2} />
             </button>
         </motion.div>
     );
 };
-// --------------------------------------------
-
 
 const AuthScreen = ({ onLoginSuccess }) => {
     const [currentView, setCurrentView] = useState('login');
-    const [toast, setToast] = useState(null); // { message: '', type: 'success' }
+    const [toast, setToast] = useState(null);
 
-    const inputStyle = `w-full p-3 pl-12 rounded-xl border border-zinc-700 bg-zinc-800 text-white 
-                        focus:ring-2 focus:ring-emerald-500 outline-none transition-colors duration-300`;
-    
-    // LOGO
     const LogoBlock = ({ title, subtitle }) => (
         <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mb-3" style={{ background: `linear-gradient(45deg, ${COLOR_PRIMARY}, #3b82f6)` }}>
-                <Package size={32} className="text-white"/>
-            </div>
-            <h2 className="text-3xl font-bold text-white">{title}</h2>
-            <p className="text-zinc-400 text-sm mt-1">{subtitle}</p>
+            <motion.div 
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                className="relative w-14 h-14 mb-4"
+            >
+                <div className="absolute inset-0 bg-gradient-to-tr from-violet-600 to-purple-600 rounded-xl"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-violet-500/0 via-violet-500/0 to-white/10 rounded-xl"></div>
+                <div className="relative w-full h-full flex items-center justify-center">
+                    <Package size={24} className="text-white" strokeWidth={1.5} />
+                </div>
+            </motion.div>
+            <motion.h1 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1, duration: 0.3 }}
+                className="text-2xl font-semibold text-zinc-100 mb-1 tracking-tight"
+            >
+                {title}
+            </motion.h1>
+            <motion.p 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.3 }}
+                className="text-sm text-zinc-400 font-normal"
+            >
+                {subtitle}
+            </motion.p>
         </div>
     );
 
-    // --- SUB-TELAS ---
+    const InputField = ({ icon: Icon, type, placeholder, value, onChange, required, name }) => (
+        <div className="relative group">
+            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-zinc-500 group-focus-within:text-violet-400 transition-colors">
+                <Icon size={16} strokeWidth={2} />
+            </div>
+            <input 
+                type={type} 
+                placeholder={placeholder} 
+                value={value} 
+                onChange={onChange} 
+                required={required}
+                name={name}
+                className="input-refined pl-10 h-10"
+            />
+        </div>
+    );
 
-    // 1. TELA DE LOGIN 
     const LoginView = () => {
         const [email, setEmail] = useState('');
         const [password, setPassword] = useState('');
 
-        const handleSubmit = (e) => {
-            e.preventDefault(); 
-            onLoginSuccess();
-        };
-
         return (
             <motion.div key="login" variants={screenVariants} initial="initial" animate="in" exit="out">
-                <LogoBlock title="Bem-vindo ao Stockie" subtitle="Sua gestão de estoque começa aqui." />
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="relative">
-                        <Mail size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="email" placeholder="E-mail" value={email} onChange={(e) => setEmail(e.target.value)} className={inputStyle} required />
-                    </div>
-                    <div className="relative">
-                        <Lock size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="password" placeholder="Senha" value={password} onChange={(e) => setPassword(e.target.value)} className={inputStyle} required />
-                    </div>
+                <LogoBlock title="Stockie" subtitle="Sistema de Gestão de Estoque" />
+                <form onSubmit={(e) => { e.preventDefault(); onLoginSuccess(); }} className="space-y-4">
+                    <InputField 
+                        icon={Mail} 
+                        type="email" 
+                        placeholder="E-mail" 
+                        value={email} 
+                        onChange={(e) => setEmail(e.target.value)}
+                    />
+                    <InputField 
+                        icon={Lock} 
+                        type="password" 
+                        placeholder="Senha" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)}
+                    />
                     
-                    <div className="flex justify-between items-center text-sm">
-                        <button type="button" onClick={() => setCurrentView('forgotPassword')} className="text-emerald-500 hover:text-emerald-400 transition-colors">
+                    <div className="flex justify-between items-center text-xs pt-1">
+                        <button 
+                            type="button" 
+                            onClick={() => setCurrentView('forgotPassword')} 
+                            className="text-violet-400 hover:text-violet-300 transition-colors font-medium"
+                        >
                             Esqueceu a senha?
                         </button>
-                        <button type="button" onClick={() => setCurrentView('requestContact')} className="text-zinc-400 hover:text-white transition-colors">
-                            Solicitar Conta
+                        <button 
+                            type="button" 
+                            onClick={() => setCurrentView('requestContact')} 
+                            className="text-zinc-500 hover:text-zinc-300 transition-colors font-medium"
+                        >
+                            Criar conta
                         </button>
                     </div>
                     
                     <motion.button
                         type="submit"
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-all duration-300 relative overflow-hidden group`}
-                        style={{ background: COLOR_PRIMARY }}
-                        whileHover={{ boxShadow: `0 0 20px 5px ${COLOR_PRIMARY}60` }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="btn-primary-refined w-full mt-6 h-10"
                     >
-                        <LogIn size={20} className="inline mr-2 -mt-1" />
-                        Entrar
+                        <div className="flex items-center justify-center gap-2">
+                            <LogIn size={16} strokeWidth={2} />
+                            <span>Entrar</span>
+                        </div>
                     </motion.button>
                 </form>
             </motion.div>
         );
     };
 
-    // 2. TELA: SOLICITAR CONTATO (Máscara e Toast integrados)
     const RequestContactView = () => {
         const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
         
         const handleChange = (e) => {
             const { name, value } = e.target;
-            let maskedValue = value;
-            
-            if (name === 'phone') {
-                maskedValue = maskPhone(value); 
-            }
-
-            setFormData({...formData, [name]: maskedValue });
+            setFormData({...formData, [name]: name === 'phone' ? maskPhone(value) : value });
         };
         
-        const handleSubmitRequest = (e) => {
-             e.preventDefault(); 
-             
-             // Mostra o Toast em vez do alert
-             setToast({ message: 'Solicitação de contato enviada! Em breve entraremos em contato.', type: 'success' });
-             
-             setCurrentView('login');
+        const handleSubmit = (e) => {
+            e.preventDefault();
+            setToast({ message: 'Solicitação enviada com sucesso!', type: 'success' });
+            setTimeout(() => setCurrentView('login'), 1500);
         };
 
         return (
             <motion.div key="request" variants={screenVariants} initial="initial" animate="in" exit="out">
-                <button onClick={() => setCurrentView('login')} className="mb-6 flex items-center text-zinc-400 hover:text-white transition-colors">
-                    <ArrowLeft size={16} className="mr-2"/> Voltar
+                <button 
+                    onClick={() => setCurrentView('login')} 
+                    className="mb-6 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors group"
+                >
+                    <ArrowLeft size={14} strokeWidth={2} className="mr-1.5"/>
+                    <span className="text-xs font-medium">Voltar</span>
                 </button>
-                <LogoBlock title="Solicitar Contato" subtitle="Preencha o formulário e nossa equipe entrará em contato." />
+                <LogoBlock title="Criar Conta" subtitle="Preencha os dados para solicitar acesso" />
 
-                <form onSubmit={handleSubmitRequest} className="space-y-4">
-                    <div className="relative">
-                        <User size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="text" name="name" placeholder="Seu Nome Completo" value={formData.name} onChange={handleChange} className={inputStyle} required />
-                    </div>
-                    <div className="relative">
-                        <Smartphone size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        {/* Campo de Telefone com Máscara */}
-                        <input type="tel" name="phone" placeholder="(99) 99999-9999" value={formData.phone} onChange={handleChange} className={inputStyle} required maxLength={15} />
-                    </div>
-                    <div className="relative">
-                        <Mail size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="email" name="email" placeholder="E-mail da Empresa" value={formData.email} onChange={handleChange} className={inputStyle} required />
-                    </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <InputField icon={User} type="text" placeholder="Nome completo" name="name" value={formData.name} onChange={handleChange} required />
+                    <InputField icon={Smartphone} type="tel" placeholder="(00) 00000-0000" name="phone" value={formData.phone} onChange={handleChange} required />
+                    <InputField icon={Mail} type="email" placeholder="E-mail" name="email" value={formData.email} onChange={handleChange} required />
                     
                     <motion.button
                         type="submit"
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-all duration-300 relative overflow-hidden`}
-                        style={{ background: COLOR_PRIMARY }}
-                        whileHover={{ boxShadow: `0 0 20px 5px ${COLOR_PRIMARY}60` }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="btn-primary-refined w-full mt-6 h-10"
                     >
-                        <MessageCircle size={20} className="inline mr-2 -mt-1" />
-                        Enviar Solicitação
+                        <div className="flex items-center justify-center gap-2">
+                            <MessageCircle size={16} strokeWidth={2} />
+                            <span>Solicitar Acesso</span>
+                        </div>
                     </motion.button>
                 </form>
             </motion.div>
         );
     };
 
-    // 3. TELA: ESQUECI A SENHA - PASSO 1 (E-MAIL)
     const ForgotPasswordView = () => {
         const [resetUser, setResetUser] = useState('');
         
-        const handleSubmit = (e) => {
-            e.preventDefault(); 
-            setCurrentView('codeVerification'); 
-        };
-
         return (
             <motion.div key="forgot" variants={screenVariants} initial="initial" animate="in" exit="out">
-                <button onClick={() => setCurrentView('login')} className="mb-6 flex items-center text-zinc-400 hover:text-white transition-colors">
-                    <ArrowLeft size={16} className="mr-2"/> Voltar
+                <button 
+                    onClick={() => setCurrentView('login')} 
+                    className="mb-6 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors group"
+                >
+                    <ArrowLeft size={14} strokeWidth={2} className="mr-1.5"/>
+                    <span className="text-xs font-medium">Voltar</span>
                 </button>
-                <LogoBlock title="Recuperar Senha" subtitle="Informe seu e-mail para receber o código de segurança." />
+                <LogoBlock title="Recuperar Senha" subtitle="Digite seu e-mail cadastrado" />
                 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    <div className="relative">
-                        <Mail size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="email" placeholder="Seu E-mail Cadastrado" value={resetUser} onChange={(e) => setResetUser(e.target.value)} className={inputStyle} required />
+                <form onSubmit={(e) => { e.preventDefault(); setCurrentView('codeVerification'); }} className="space-y-4">
+                    <InputField icon={Mail} type="email" placeholder="E-mail" value={resetUser} onChange={(e) => setResetUser(e.target.value)} required />
+                    
+                    <div className="flex items-start gap-2.5 p-3 rounded-lg bg-violet-500/5 border border-violet-500/10">
+                        <Shield size={16} className="text-violet-400 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                        <p className="text-xs text-zinc-400 leading-relaxed">
+                            Enviaremos um código de verificação de 6 dígitos para o e-mail informado.
+                        </p>
                     </div>
-                    <p className="text-sm text-zinc-500 text-center">
-                        Enviaremos um código de 6 dígitos para este endereço.
-                    </p>
+
                     <motion.button
                         type="submit"
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-all duration-300 relative overflow-hidden`}
-                        style={{ background: COLOR_PRIMARY }}
-                        whileHover={{ boxShadow: `0 0 20px 5px ${COLOR_PRIMARY}60` }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="btn-primary-refined w-full mt-6 h-10"
                     >
-                        Enviar Código
+                        <div className="flex items-center justify-center gap-2">
+                            <Mail size={16} strokeWidth={2} />
+                            <span>Enviar Código</span>
+                        </div>
                     </motion.button>
                 </form>
             </motion.div>
         );
     };
 
-    // 4. TELA: ESQUECI A SENHA - PASSO 2 (CÓDIGO - CORRIGIDO PARA BACKSPACE)
     const CodeVerificationView = () => {
-        // Estado para 6 dígitos, inicializado com strings vazias
         const [code, setCode] = useState(['', '', '', '', '', '']);
         const inputRefs = useRef([]);
-        const isCodeComplete = code.every(digit => digit !== ''); // Verifica se todos os campos estão preenchidos
-
-        // Adiciona um ref para cada input na lista
-        const setRef = (el) => {
-            if (el && !inputRefs.current.includes(el)) {
-                inputRefs.current.push(el);
-            }
-        };
+        const isCodeComplete = code.every(digit => digit !== '');
 
         const handleChange = (e, index) => {
-            const value = e.target.value.replace(/\D/g, '').slice(0, 1); // Aceita apenas 1 dígito
-            
-            // 1. Lógica de DIGITAÇÃO (Adicionar dígito e mover foco)
+            const value = e.target.value.replace(/\D/g, '').slice(0, 1);
             if (value !== '') {
-                // Atualiza o dígito atual
                 const newCode = [...code];
                 newCode[index] = value;
                 setCode(newCode);
-    
-                // Move o foco para o próximo campo, se não for o último
-                if (index < 5) {
-                    inputRefs.current[index + 1].focus();
-                }
-            } else {
-                // Se o usuário tentar apagar digitando vazio, tratamos como Backspace
-                // O evento de Backspace é tratado separadamente no onKeyDown
+                if (index < 5) inputRefs.current[index + 1]?.focus();
             }
         };
 
-        // Função para tratar o Backspace
         const handleKeyDown = (e, index) => {
             if (e.key === 'Backspace') {
-                e.preventDefault(); // Impede o comportamento padrão de backspace
-                
-                // Se o campo atual ESTIVER PREENCHIDO, apaga apenas ele.
+                e.preventDefault();
                 if (code[index] !== '') {
                     const newCode = [...code];
                     newCode[index] = '';
                     setCode(newCode);
-                } 
-                // Se o campo atual ESTIVER VAZIO, move o foco para o anterior e apaga o conteúdo dele.
-                else if (index > 0) {
-                    inputRefs.current[index - 1].focus();
-                    
-                    // Apaga o dígito no campo anterior (UX intuitiva)
+                } else if (index > 0) {
+                    inputRefs.current[index - 1]?.focus();
                     const newCode = [...code];
                     newCode[index - 1] = '';
                     setCode(newCode);
@@ -279,145 +278,137 @@ const AuthScreen = ({ onLoginSuccess }) => {
             }
         };
 
-
-        const handleSubmitCode = (e) => {
-            e.preventDefault(); 
-            const finalCode = code.join(''); 
-            console.log("Código Verificado:", finalCode);
-
-            if (isCodeComplete) {
-                setCurrentView('resetPassword');
-            }
-        };
-
         return (
             <motion.div key="code" variants={screenVariants} initial="initial" animate="in" exit="out">
-                <button onClick={() => setCurrentView('forgotPassword')} className="mb-6 flex items-center text-zinc-400 hover:text-white transition-colors">
-                    <ArrowLeft size={16} className="mr-2"/> E-mail incorreto?
+                <button 
+                    onClick={() => setCurrentView('forgotPassword')} 
+                    className="mb-6 flex items-center text-zinc-400 hover:text-zinc-100 transition-colors"
+                >
+                    <ArrowLeft size={14} strokeWidth={2} className="mr-1.5"/>
+                    <span className="text-xs font-medium">Alterar e-mail</span>
                 </button>
-                <LogoBlock title="Verificação de Código" subtitle={`Insira o código enviado para seu e-mail.`} />
+                <LogoBlock title="Código de Verificação" subtitle="Digite o código enviado para seu e-mail" />
                 
-                <form onSubmit={handleSubmitCode} className="space-y-6">
+                <form onSubmit={(e) => { e.preventDefault(); if(isCodeComplete) setCurrentView('resetPassword'); }} className="space-y-6">
                     <div className="flex justify-between gap-2">
                         {code.map((digit, index) => (
-                            <motion.input
+                            <input
                                 key={index}
-                                ref={setRef} // Atribui o ref correto
+                                ref={el => inputRefs.current[index] = el}
                                 type="text"
-                                pattern="[0-9]"
                                 inputMode="numeric"
                                 maxLength="1"
                                 value={digit}
                                 onChange={(e) => handleChange(e, index)}
-                                onKeyDown={(e) => handleKeyDown(e, index)} // <<< NOVO HANDLER APLICADO AQUI
-                                onFocus={(e) => e.target.select()} // Seleciona o conteúdo ao focar
-                                className={`w-full aspect-square text-2xl text-center rounded-xl border-2 bg-zinc-800 text-white 
-                                    focus:ring-2 focus:ring-emerald-500 outline-none transition-colors 
-                                    ${digit ? 'border-emerald-500' : 'border-zinc-700'}`
-                                }
+                                onKeyDown={(e) => handleKeyDown(e, index)}
+                                onFocus={(e) => e.target.select()}
+                                className={`w-full h-12 text-center text-lg font-semibold rounded-lg border bg-zinc-900/50 text-white transition-all
+                                    ${digit ? 'border-violet-500/50 bg-violet-500/5' : 'border-zinc-800/50 hover:border-zinc-700/50'}
+                                    focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/50`}
                                 required
                             />
                         ))}
                     </div>
+                    
                     <motion.button
                         type="submit"
-                        disabled={!isCodeComplete} 
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-all duration-300 relative overflow-hidden disabled:opacity-50`}
-                        style={{ background: COLOR_PRIMARY }}
-                        whileHover={{ boxShadow: `0 0 20px 5px ${COLOR_PRIMARY}60` }}
-                        whileTap={{ scale: 0.98 }}
+                        disabled={!isCodeComplete}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="btn-primary-refined w-full h-10"
                     >
-                        <RefreshCw size={20} className="inline mr-2 -mt-1" />
-                        Verificar
+                        <div className="flex items-center justify-center gap-2">
+                            <RefreshCw size={16} strokeWidth={2} />
+                            <span>Verificar</span>
+                        </div>
                     </motion.button>
                 </form>
             </motion.div>
         );
     };
 
-    // 5. TELA: ESQUECI A SENHA - PASSO 3 (RESET)
     const ResetPasswordView = () => {
         const [newPassword, setNewPassword] = useState('');
         
         const handleReset = (e) => {
-            e.preventDefault(); 
-            
-            // Mostra o Toast em vez do alert
-            setToast({ message: 'Senha redefinida com sucesso! Redirecionando para o login.', type: 'success' });
-            
-            // Simula o tempo de feedback do usuário antes de voltar ao login
-            setTimeout(() => {
-                setCurrentView('login');
-                setToast(null); // Limpa o toast
-            }, 100); 
+            e.preventDefault();
+            setToast({ message: 'Senha redefinida com sucesso!', type: 'success' });
+            setTimeout(() => setCurrentView('login'), 1500);
         };
 
         return (
             <motion.div key="reset" variants={screenVariants} initial="initial" animate="in" exit="out">
-                <LogoBlock title="Definir Nova Senha" subtitle="Crie uma nova senha forte para sua conta." />
+                <LogoBlock title="Nova Senha" subtitle="Crie uma senha segura para sua conta" />
                 
-                <form onSubmit={handleReset} className="space-y-6">
-                    <div className="relative">
-                        <Lock size={18} className="absolute left-4 top-1/2 transform -translate-y-1/2 text-zinc-500" />
-                        <input type="password" placeholder="Nova Senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputStyle} required />
-                    </div>
+                <form onSubmit={handleReset} className="space-y-4">
+                    <InputField icon={Lock} type="password" placeholder="Nova senha" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required />
+                    
                     <motion.button
                         type="submit"
-                        className={`w-full py-3 rounded-xl font-bold text-white transition-all duration-300 relative overflow-hidden`}
-                        style={{ background: COLOR_PRIMARY }}
-                        whileHover={{ boxShadow: `0 0 20px 5px ${COLOR_PRIMARY}60` }}
-                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        className="btn-primary-refined w-full mt-6 h-10"
                     >
-                        <CheckCircle size={20} className="inline mr-2 -mt-1" />
-                        Redefinir Senha
+                        <div className="flex items-center justify-center gap-2">
+                            <CheckCircle size={16} strokeWidth={2} />
+                            <span>Redefinir Senha</span>
+                        </div>
                     </motion.button>
-                    <button type="button" onClick={() => setCurrentView('login')} className="w-full text-zinc-500 hover:text-white transition-colors mt-4">
-                        Voltar para o Login
+
+                    <button 
+                        type="button" 
+                        onClick={() => setCurrentView('login')} 
+                        className="w-full text-zinc-500 hover:text-zinc-300 transition-colors mt-3 text-xs font-medium"
+                    >
+                        Voltar ao login
                     </button>
                 </form>
             </motion.div>
         );
     };
 
-
     const renderView = () => {
         switch (currentView) {
-            case 'login':
-                return <LoginView />;
-            case 'requestContact':
-                return <RequestContactView />;
-            case 'forgotPassword':
-                return <ForgotPasswordView />;
-            case 'codeVerification':
-                return <CodeVerificationView />;
-            case 'resetPassword':
-                return <ResetPasswordView />;
-            default:
-                return <LoginView />;
+            case 'login': return <LoginView />;
+            case 'requestContact': return <RequestContactView />;
+            case 'forgotPassword': return <ForgotPasswordView />;
+            case 'codeVerification': return <CodeVerificationView />;
+            case 'resetPassword': return <ResetPasswordView />;
+            default: return <LoginView />;
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-zinc-900 font-sans p-4 relative overflow-hidden">
-            {/* Ambient Glows */}
-             <div className="absolute w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: `radial-gradient(circle, ${COLOR_PRIMARY}, transparent 70%)`, top: '10%', left: '10%', transform: 'translate(-50%, -50%)', zIndex: 0 }}/>
-            <div className="absolute w-96 h-96 rounded-full opacity-10 blur-3xl" style={{ background: `radial-gradient(circle, #3b82f6, transparent 70%)`, bottom: '10%', right: '10%', transform: 'translate(50%, 50%)', zIndex: 0 }}/>
-
+        <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-zinc-950">
+            {/* Grid de fundo sutil */}
+            <div className="absolute inset-0 bg-grid-refined opacity-30"></div>
+            
+            {/* Gradientes de fundo suaves */}
+            <div className="absolute w-96 h-96 rounded-full blur-3xl bg-violet-600/5 -top-48 -left-48"></div>
+            <div className="absolute w-96 h-96 rounded-full blur-3xl bg-purple-600/5 -bottom-48 -right-48"></div>
 
             <motion.div
-                className="relative w-full max-w-sm p-8 md:p-10 rounded-3xl bg-zinc-800/80 backdrop-blur-md border border-zinc-700 shadow-2xl shadow-black/60 z-10 overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+                className="relative w-full max-w-md"
             >
-                {/* O AnimatePresence lida com a transição suave entre as sub-telas */}
-                <AnimatePresence mode="wait">
-                    {renderView()}
-                </AnimatePresence>
-                
-                <p className="text-center text-xs text-zinc-600 mt-8">
-                    © 2025 Stockie | Lynav Innovations
-                </p>
+                <div className="card-refined p-8">
+                    <AnimatePresence mode="wait">
+                        {renderView()}
+                    </AnimatePresence>
+                    
+                    <motion.p 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3 }}
+                        className="text-center text-xs text-zinc-600 mt-8"
+                    >
+                        © 2025 Stockie · Lynav Innovations
+                    </motion.p>
+                </div>
             </motion.div>
             
-            {/* TOAST NOTIFICATION (Sempre no topo) */}
             <AnimatePresence>
                 {toast && (
                     <ToastNotification 

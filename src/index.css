@@ -2,7 +2,244 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Opcional: Deixar o fundo suave por padrão */
-body {
-  background-color: #09090b; /* Zinc 950 */
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 263 70% 50%;
+    --radius: 0.5rem;
+  }
+
+  .light {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 263 70% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer utilities {
+  /* Scrollbar refinado */
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800 rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-zinc-700;
+  }
+
+  /* Efeitos suaves */
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Gradient de texto refinado */
+  .text-gradient {
+    @apply bg-gradient-to-r from-violet-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent;
+  }
+
+  /* Card com borda sutil */
+  .card-refined {
+    @apply bg-zinc-900/40 border border-zinc-800/50 backdrop-blur-sm rounded-xl;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+
+  .card-refined:hover {
+    @apply border-zinc-700/50 bg-zinc-900/60;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Input refinado */
+  .input-refined {
+    @apply w-full px-3 py-2 bg-zinc-900/50 border border-zinc-800/50 rounded-lg text-sm;
+    @apply placeholder:text-zinc-500 text-zinc-100;
+    @apply focus:outline-none focus:ring-1 focus:ring-violet-500/50 focus:border-violet-500/50;
+    @apply transition-smooth;
+  }
+
+  /* Botão primário refinado */
+  .btn-refined {
+    @apply px-4 py-2 rounded-lg font-medium text-sm;
+    @apply transition-smooth;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-primary-refined {
+    @apply btn-refined bg-gradient-to-r from-violet-600 to-purple-600 text-white;
+    @apply hover:from-violet-500 hover:to-purple-500;
+    @apply shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary-refined {
+    @apply btn-refined bg-zinc-800/50 text-zinc-200 border border-zinc-700/50;
+    @apply hover:bg-zinc-800 hover:border-zinc-600/50;
+  }
+
+  .btn-ghost-refined {
+    @apply btn-refined text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50;
+  }
+
+  /* Badge refinado */
+  .badge-refined {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium;
+  }
+
+  .badge-violet {
+    @apply badge-refined bg-violet-500/10 text-violet-400 border border-violet-500/20;
+  }
+
+  .badge-blue {
+    @apply badge-refined bg-blue-500/10 text-blue-400 border border-blue-500/20;
+  }
+
+  .badge-rose {
+    @apply badge-refined bg-rose-500/10 text-rose-400 border border-rose-500/20;
+  }
+
+  /* Separador sutil */
+  .separator-refined {
+    @apply h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent;
+  }
+
+  /* Glow sutil para hover */
+  .glow-violet-subtle {
+    @apply hover:shadow-lg hover:shadow-violet-500/10;
+  }
+
+  /* Container com grid de fundo sutil */
+  .bg-grid-refined {
+    background-image: 
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* Texto com peso refinado */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Estados de seleção */
+  ::selection {
+    @apply bg-violet-500/30 text-violet-100;
+  }
+
+  /* Animação de entrada suave */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fadeInUp {
+    animation: fadeInUp 0.4s ease-out;
+  }
+
+  /* Skeleton loading refinado */
+  @keyframes pulse-refined {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .skeleton-refined {
+    @apply bg-zinc-800/50 animate-pulse;
+  }
+}
+
+/* Light mode adjustments */
+.light .card-refined {
+  @apply bg-white border-zinc-200;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+.light .card-refined:hover {
+  @apply border-zinc-300 bg-zinc-50/50;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.light .input-refined {
+  @apply bg-white border-zinc-200 text-zinc-900 placeholder:text-zinc-400;
+  @apply focus:ring-violet-500/30 focus:border-violet-500/50;
+}
+
+.light .btn-secondary-refined {
+  @apply bg-zinc-100 text-zinc-700 border-zinc-200;
+  @apply hover:bg-zinc-200 hover:border-zinc-300;
+}
+
+.light .btn-ghost-refined {
+  @apply text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100;
+}
+
+.light .scrollbar-thin::-webkit-scrollbar-thumb {
+  @apply bg-zinc-300;
+}
+
+.light .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  @apply bg-zinc-400;
 }
