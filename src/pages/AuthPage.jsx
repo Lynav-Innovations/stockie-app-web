@@ -100,8 +100,7 @@ export const AuthPage = ({ onLoginSuccess }) => {
                                 type="email" 
                                 placeholder="E-mail" 
                                 value={email} 
-                                onChange={(e) => setEmail(e.target.value)} 
-                                required 
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="pl-10"
                             />
                         </div>
@@ -111,8 +110,7 @@ export const AuthPage = ({ onLoginSuccess }) => {
                                 type="password" 
                                 placeholder="Senha" 
                                 value={password} 
-                                onChange={(e) => setPassword(e.target.value)} 
-                                required 
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="pl-10"
                             />
                         </div>
